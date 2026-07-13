@@ -1,6 +1,37 @@
-<h1 align='center'>ETL-Template</h1>
+<h1 align='center'>ETL-USGS-Gauges</h1>
 
-<p align='center'>Template Repository for creating new ETLs</p>
+<p align='center'>Import USGS stream gauge observations into CloudTAK, colored by NWS flood alarm state</p>
+
+## Overview
+
+This ETL pulls stream/river gauge data from the NWS [National Water Prediction Service (NWPS)](https://water.noaa.gov/)
+API. NWPS republishes USGS instantaneous gauge observations (gage height and streamflow) alongside the NWS maintained
+flood category for each gauge. USGS maintains the underlying observation data while the NWS maintains the flood
+thresholds and resulting alarm state.
+
+Each gauge within the configured bounding box is submitted to the TAK Server as a GeoJSON point feature, with the marker
+color set by the observed NWS flood category (alarm state):
+
+| Alarm State        | Flood Category | Marker Color |
+| ------------------ | -------------- | ------------ |
+| Major Flooding     | `major`        | `#B243B1`    |
+| Moderate Flooding  | `moderate`     | `#D94B4A`    |
+| Minor Flooding     | `minor`        | `#F5A623`    |
+| Action Stage       | `action`       | `#FFDE63`    |
+| No Flooding        | `no_flooding`  | `#98E09A`    |
+| No Current Data    | *other*        | `#CCCCCC`    |
+
+The observed gage height (ft), streamflow (cfs), observation time, and responsible NWS office are attached to each
+feature's remarks and `metadata` properties.
+
+## Configuration
+
+The following values are configured via the CloudTAK Layer environment:
+
+| Variable      | Description |
+| ------------- | ----------- |
+| `BoundingBox` | Bounding box limiting gauges to a given area, formatted as `xmin,ymin,xmax,ymax` (West Longitude, South Latitude, East Longitude, North Latitude) in decimal degrees. Western longitudes are negative. Defaults to the state of Colorado (`-109.06,36.99,-102.04,41.00`). |
+| `DEBUG`       | Print the resulting GeoJSON Feature Collection in the logs. |
 
 ## Development
 

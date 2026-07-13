@@ -1,5 +1,5 @@
 {
-    "name": "coe-etl-template",
+    "name": "coe-etl-usgs-gauges",
     "type": "module",
     "prviate": true,
     "version": "1.0.0",
