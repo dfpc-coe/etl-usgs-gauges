@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v1.1.0
+
+- :rocket: Include External Links
+
 ### v1.0.0
 
 - :rocket: Initial Approach

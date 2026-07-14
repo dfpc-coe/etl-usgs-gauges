@@ -34,7 +34,8 @@ const OutputSchema = Type.Object({
     stageFt: Type.Optional(Type.Number({ description: 'Observed gage height in feet' })),
     flowCfs: Type.Optional(Type.Number({ description: 'Observed streamflow in cubic feet per second' })),
     observedAt: Type.Optional(Type.String({ description: 'Timestamp of the observed reading (UTC)' })),
-    forecastCategory: Type.Optional(Type.String({ description: 'Forecast NWS flood category' }))
+    forecastCategory: Type.Optional(Type.String({ description: 'Forecast NWS flood category' })),
+    usgsId: Type.Optional(Type.String({ description: 'USGS site number for this gauge' }))
 })
 
 /**
@@ -73,6 +74,11 @@ const Gauge = Type.Object({
 
 const GaugesResponse = Type.Object({
     gauges: Type.Array(Gauge)
+});
+
+const GaugeDetail = Type.Object({
+    lid: Type.String(),
+    usgsId: Type.Optional(Type.String())
 });
 
 /**
@@ -137,6 +143,21 @@ export default class Task extends ETL {
 
         const body = await res.typed(GaugesResponse);
 
+        const detailMap = new Map<string, string | undefined>();
+        await Promise.all(body.gauges.map(async (gauge) => {
+            try {
+                const detailRes = await fetch(new URL(`https://api.water.noaa.gov/nwps/v1/gauges/${gauge.lid}`), {
+                    headers: {
+                        'User-Agent': 'CloudTAK-ETL-USGS-Gauges (nicholas.ingalls@state.co.us)'
+                    }
+                });
+                const detail = await detailRes.typed(GaugeDetail);
+                detailMap.set(gauge.lid, detail.usgsId);
+            } catch {
+                detailMap.set(gauge.lid, undefined);
+            }
+        }));
+
         const features: Static<typeof Feature.InputFeature>[] = [];
 
         for (const gauge of body.gauges) {
@@ -166,6 +187,10 @@ export default class Task extends ETL {
 
             const hasObservedTime = Boolean(observed && observed.validTime && !observed.validTime.startsWith('0001'));
 
+            const usgsId = detailMap.get(gauge.lid);
+            const nwsUrl = `https://water.noaa.gov/gauges/${gauge.lid}`;
+            const usgsUrl = usgsId ? `https://waterdata.usgs.gov/monitoring-location/${usgsId}/` : undefined;
+
             const remarks = [
                 gauge.name,
                 `NWS Location ID: ${gauge.lid}`,
@@ -187,8 +212,14 @@ export default class Task extends ETL {
                 stageFt,
                 flowCfs,
                 observedAt: hasObservedTime && observed ? observed.validTime : undefined,
-                forecastCategory: gauge.status && gauge.status.forecast ? gauge.status.forecast.floodCategory : undefined
+                forecastCategory: gauge.status && gauge.status.forecast ? gauge.status.forecast.floodCategory : undefined,
+                usgsId
             };
+
+            const links: Array<{ url: string; remarks: string; relation: string; mime: string }> = [
+                { url: nwsUrl, remarks: 'NWS Prediction', relation: 'r-u', mime: 'text/html' },
+                ...(usgsUrl ? [{ url: usgsUrl, remarks: 'USGS Gauge', relation: 'r-u', mime: 'text/html' }] : [])
+            ];
 
             features.push({
                 id: `nwps-${gauge.lid}`,
@@ -200,6 +231,7 @@ export default class Task extends ETL {
                     // Expire features 6 hours after each run so stale gauges drop off the map
                     stale: 6 * 60 * 60 * 1000,
                     remarks,
+                    links,
                     metadata
                 },
                 geometry: {
