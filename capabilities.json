@@ -1,0 +1,27 @@
+{
+    "version": "1.0",
+    "name": "USGS Stream Gauges",
+    "description": "Ingests stream gauge water level and flow observations from the USGS and posts them to the map.",
+    "compute": {
+        "memory": 512,
+        "timeout": 60
+    },
+    "permissions": [
+        {
+            "resource": "feature:*",
+            "required": true,
+            "description": "Posts USGS stream gauge observations to the map"
+        }
+    ],
+    "invocations": {
+        "incoming": {
+            "schedule": {
+                "description": "Polls the USGS for updated stream gauge observations on a schedule.",
+                "default": {
+                    "enabled": true,
+                    "schedule": "rate(5 minutes)"
+                }
+            }
+        }
+    }
+}
