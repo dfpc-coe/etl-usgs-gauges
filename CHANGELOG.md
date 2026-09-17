@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v1.3.0
+
+- :rocket: Update FlowCFS formatting
+
 ### v1.2.0
 
 - :rocket: Add Capabilities document

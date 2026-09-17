@@ -177,7 +177,8 @@ export default class Task extends ETL {
                     if (reading.unit === 'ft') {
                         stageFt = reading.value;
                     } else if (reading.unit === 'kcfs') {
-                        flowCfs = reading.value * 1000;
+                        // Round away float artifacts (1.1 * 1000 = 1100.0000000000002) so whole values stay integers
+                        flowCfs = Number((reading.value * 1000).toFixed(3));
                     }
                 }
             }
@@ -196,7 +197,7 @@ export default class Task extends ETL {
                 `NWS Location ID: ${gauge.lid}`,
                 `Alarm State: ${style.label}`,
                 stageFt !== undefined ? `Gage Height: ${stageFt.toFixed(2)} ft` : null,
-                flowCfs !== undefined ? `Streamflow: ${flowCfs.toFixed(1)} cfs` : null,
+                flowCfs !== undefined ? `Streamflow: ${Number(flowCfs.toFixed(1))} cfs` : null,
                 hasObservedTime && observed ? `Observed: ${observed.validTime}` : null,
                 gauge.wfo ? `Forecast Office: ${gauge.wfo.name} (${gauge.wfo.abbreviation})` : null
             ].filter((line) => line !== null).join('\n');
