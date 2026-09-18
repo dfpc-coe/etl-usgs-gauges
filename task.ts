@@ -33,7 +33,7 @@ const OutputSchema = Type.Object({
     floodCategoryLabel: Type.String({ description: 'Human readable observed flood category' }),
     stageFt: Type.Optional(Type.Number({ description: 'Observed gage height in feet' })),
     flowCfs: Type.Optional(Type.Number({ description: 'Observed streamflow in cubic feet per second' })),
-    observedAt: Type.Optional(Type.String({ description: 'Timestamp of the observed reading (UTC)' })),
+    observedAt: Type.Optional(Type.String({ format: 'date-time', description: 'Timestamp of the observed reading (UTC)' })),
     forecastCategory: Type.Optional(Type.String({ description: 'Forecast NWS flood category' })),
     usgsId: Type.Optional(Type.String({ description: 'USGS site number for this gauge' }))
 })

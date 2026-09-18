@@ -10,6 +10,12 @@
 
 ## Version History
 
+### Pending Release
+
+### v1.3.1
+
+- :bug: Register `observedAt` as a `date-time` in the Output Schema
+
 ### v1.3.0
 
 - :rocket: Update FlowCFS formatting
